@@ -1,11 +1,11 @@
-const CACHE_NAME = 'tchibank-v2';
+const CACHE_NAME = 'tchibank-v3';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './icon-192.svg',
-  './icon-512.svg',
-  'https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@400;500;700;900&family=Spectral:wght@300;400;500;600&display=swap'
+  './icon-192.png',
+  './icon-512.png',
+  'https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap'
 ];
 
 self.addEventListener('install', (e) => {
