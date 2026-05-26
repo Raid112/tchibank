@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#0a0a0c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TchiBank">
+  <title>TchiBank</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@400;500;700;900&family=Spectral:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0c;
+      --bg-deep: #060608;
+      --surface: #16131a;
+      --surface-2: #1d1a24;
+      --border: #2a2530;
+      --border-gold: rgba(192,160,98,0.22);
+      --blood: #8b0000;
+      --blood-bright: #b71c1c;
+      --gold: #c0a062;
+      --gold-bright: #d4b572;
+      --text: #e6e1d8;
+      --text-muted: #8a8278;
+      --ok: #6b8e5a;
+      --danger: #b71c1c;
+      --font-display: 'Grenze Gotisch', serif;
+      --font-body: 'Spectral', serif;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image: radial-gradient(circle at 50% -10%, #18141d 0%, var(--bg) 55%, var(--bg-deep) 100%);
+      background-attachment: fixed;
+    }
+
+    .screen { display: none; padding: 0 18px 110px; max-width: 560px; margin: 0 auto; }
+    .screen.active { display: block; animation: fadeIn .25s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* ─── Setup ─── */
+    .setup-screen {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      flex-direction: column; align-items: center; justify-content: center;
+      padding: 32px 26px; background: var(--bg);
+      background-image: radial-gradient(circle at 50% 20%, #1a141f 0%, var(--bg) 60%);
+    }
+    .setup-screen.active { display: flex; }
+    .setup-logo { font-family: var(--font-display); font-weight: 900; font-size: 52px; letter-spacing: 1px; color: var(--text); }
+    .setup-logo span { color: var(--blood-bright); }
+    .ornament { color: var(--gold); opacity: .55; font-size: 13px; letter-spacing: 3px; margin: 10px 0 20px; text-align: center; }
+    .setup-text { color: var(--text-muted); text-align: center; max-width: 340px; line-height: 1.5; margin-bottom: 22px; font-size: 15px; }
+    .field-label { font-size: 12px; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 6px 4px; align-self: flex-start; }
+    .input {
+      width: 100%; max-width: 360px; padding: 14px 16px; margin-bottom: 14px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      color: var(--text); font-family: var(--font-body); font-size: 16px; outline: none; transition: border-color .2s;
+    }
+    .input:focus { border-color: var(--gold); }
+    .btn {
+      font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: .5px;
+      padding: 13px 22px; border-radius: var(--radius-sm); border: none; cursor: pointer; transition: filter .2s, transform .1s;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: var(--blood); color: var(--text); }
+    .btn-primary:hover { filter: brightness(1.15); }
+    .btn-gold { background: linear-gradient(135deg, var(--gold-bright), #9c7d3f); color: #1a1410; }
+    .btn-ghost { background: var(--surface-2); color: var(--text-muted); }
+    .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+    .btn-block { width: 100%; max-width: 360px; }
+    .setup-error { color: var(--danger); font-size: 14px; margin-top: 12px; min-height: 18px; text-align: center; }
+
+    /* ─── Header ─── */
+    .app-header {
+      position: sticky; top: 0; z-index: 50; max-width: 560px; margin: 0 auto;
+      padding: calc(env(safe-area-inset-top) + 12px) 18px 12px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: linear-gradient(180deg, var(--bg) 70%, transparent);
+    }
+    .month-nav { display: flex; align-items: center; gap: 10px; }
+    .month-nav button {
+      background: var(--surface); border: 1px solid var(--border); color: var(--gold);
+      width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; line-height: 1;
+      display: flex; align-items: center; justify-content: center; transition: border-color .2s;
+    }
+    .month-nav button:active { border-color: var(--gold); }
+    .month-label { font-family: var(--font-display); font-weight: 700; font-size: 21px; min-width: 150px; text-align: center; text-transform: capitalize; }
+    .header-actions { display: flex; align-items: center; gap: 12px; }
+    .sync-indicator { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); }
+    .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
+    .sync-dot.syncing { background: var(--gold); animation: pulse 1s infinite; }
+    .sync-dot.offline { background: var(--text-muted); }
+    .sync-dot.error { background: var(--danger); }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+    .icon-btn { background: none; border: none; color: var(--gold); cursor: pointer; padding: 4px; display: flex; }
+    .icon-btn svg { width: 22px; height: 22px; }
+
+    /* ─── Meta card ─── */
+    .meta-card {
+      background: linear-gradient(160deg, var(--surface-2), var(--surface));
+      border: 1px solid var(--border-gold); border-radius: var(--radius);
+      padding: 22px 20px 24px; margin-top: 6px; position: relative; overflow: hidden;
+    }
+    .meta-card::before { content: ''; position: absolute; inset: 0; border-radius: var(--radius); pointer-events: none;
+      box-shadow: inset 0 1px 0 rgba(212,181,114,0.12); }
+    .meta-spent { font-family: var(--font-display); font-weight: 900; font-size: 44px; line-height: 1; color: var(--text); text-align: center; }
+    .meta-of { text-align: center; color: var(--text-muted); font-size: 14px; margin-top: 6px; }
+    .meta-of b { color: var(--gold); font-weight: 600; }
+    .progress { height: 12px; border-radius: 6px; background: var(--bg-deep); margin: 18px 0 8px; overflow: hidden; border: 1px solid var(--border); }
+    .progress-fill { height: 100%; border-radius: 6px; transition: width .4s ease, background .3s; background: var(--ok); }
+    .progress-fill.warn { background: var(--gold); }
+    .progress-fill.over { background: var(--blood-bright); }
+    .meta-foot { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-muted); }
+    .meta-foot b { color: var(--text); font-weight: 600; }
+    .meta-foot .over-txt { color: var(--blood-bright); }
+
+    .frufrus { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
+    .frufru { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 8px; text-align: center; }
+    .frufru-val { font-family: var(--font-display); font-weight: 700; font-size: 19px; color: var(--gold-bright); }
+    .frufru-lbl { font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 3px; }
+
+    /* ─── List ─── */
+    .section-title { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text); margin: 26px 4px 12px; display: flex; align-items: center; gap: 8px; }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border-gold); }
+    .gasto-list { display: flex; flex-direction: column; gap: 8px; }
+    .gasto-item {
+      display: flex; align-items: center; gap: 12px; padding: 13px 14px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; transition: border-color .15s;
+    }
+    .gasto-item:active { border-color: var(--gold); }
+    .gasto-cat { flex: 1; min-width: 0; }
+    .gasto-cat-name { font-weight: 600; font-size: 15.5px; }
+    .gasto-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .gasto-val { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--gold-bright); white-space: nowrap; }
+    .empty { text-align: center; color: var(--text-muted); padding: 40px 20px; font-style: italic; }
+
+    /* ─── FAB ─── */
+    .fab {
+      position: fixed; right: 22px; bottom: calc(78px + env(safe-area-inset-bottom)); z-index: 60;
+      width: 60px; height: 60px; border-radius: 50%; border: 1px solid var(--gold);
+      background: var(--blood); color: var(--gold-bright); font-size: 32px; line-height: 1; cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center;
+      transition: transform .12s, filter .2s;
+    }
+    .fab:active { transform: scale(.92); }
+
+    /* ─── Tab bar ─── */
+    .tab-bar {
+      position: fixed; bottom: 0; left: 0; right: 0; height: calc(64px + env(safe-area-inset-bottom)); z-index: 70;
+      display: flex; justify-content: space-around; align-items: flex-start; padding-top: 8px;
+      padding-bottom: env(safe-area-inset-bottom);
+      background: rgba(10,10,12,.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border-gold);
+    }
+    .tab-item { background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px 18px; font-family: var(--font-body); font-size: 11px; transition: color .2s; }
+    .tab-item svg { width: 22px; height: 22px; }
+    .tab-item.active { color: var(--gold-bright); }
+
+    /* ─── Overlay / Modal ─── */
+    .overlay { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.72); overflow-y: auto; -webkit-overflow-scrolling: touch; animation: fadeIn .2s; }
+    .overlay.active { display: block; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border-gold); border-radius: 20px;
+      width: calc(100% - 36px); max-width: 460px; margin: 40px auto; padding: 24px 20px 26px; animation: slideUp .28s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-title { font-family: var(--font-display); font-weight: 700; font-size: 24px; text-align: center; }
+    .modal .ornament { margin: 8px 0 18px; }
+    .form-actions { display: flex; gap: 10px; margin-top: 22px; }
+    .form-actions .btn { flex: 1; }
+    select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%23c0a062' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 38px; }
+    textarea.input { resize: none; min-height: 64px; }
+    .readonly-field { padding: 12px 16px; background: var(--bg-deep); border: 1px dashed var(--border); border-radius: var(--radius-sm); color: var(--text-muted); margin-bottom: 14px; }
+    .readonly-field b { color: var(--text); font-weight: 600; }
+
+    /* ─── Confirm dialog ─── */
+    .confirm-box { background: var(--surface); border: 1px solid var(--border-gold); border-radius: 18px; width: calc(100% - 60px); max-width: 360px; margin: 30vh auto 0; padding: 26px 22px; text-align: center; animation: slideUp .25s; }
+    .confirm-msg { font-size: 16px; line-height: 1.5; margin-bottom: 22px; }
+
+    /* ─── Dashes ─── */
+    .dash-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 16px; margin-bottom: 16px; }
+    .dash-card h3 { font-family: var(--font-display); font-weight: 700; font-size: 17px; margin-bottom: 14px; color: var(--gold-bright); }
+    .bar-row { margin-bottom: 12px; }
+    .bar-head { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+    .bar-head .v { color: var(--gold); font-weight: 600; }
+    .bar-track { height: 10px; background: var(--bg-deep); border-radius: 5px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 5px; background: linear-gradient(90deg, var(--blood), var(--gold)); transition: width .4s; }
+    .evo { display: flex; align-items: flex-end; gap: 8px; height: 150px; padding-top: 10px; }
+    .evo-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 6px; }
+    .evo-bar-wrap { width: 100%; height: 100%; display: flex; align-items: flex-end; justify-content: center; position: relative; }
+    .evo-bar { width: 70%; border-radius: 4px 4px 0 0; background: var(--gold); transition: height .4s; min-height: 2px; }
+    .evo-bar.over { background: var(--blood-bright); }
+    .evo-val { font-size: 10px; color: var(--text-muted); }
+    .evo-lbl { font-size: 11px; color: var(--text-muted); text-transform: capitalize; }
+
+    /* ─── Ajustes ─── */
+    .setting-group { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+    .setting-group h3 { font-family: var(--font-display); font-weight: 700; font-size: 17px; margin-bottom: 12px; color: var(--gold-bright); }
+    .cat-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px; padding: 6px 8px 6px 12px; margin: 0 6px 6px 0; font-size: 14px; }
+    .cat-chip button { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 2px; }
+    .row-inline { display: flex; gap: 8px; }
+    .row-inline .input { margin-bottom: 0; }
+
+    /* ─── Toast ─── */
+    .toast { position: fixed; bottom: calc(90px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface-2); border: 1px solid var(--gold); color: var(--text); padding: 11px 22px; border-radius: 24px; font-size: 14px; opacity: 0; pointer-events: none; transition: all .3s; z-index: 300; }
+    .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+  <!-- ─── Setup ─── -->
+  <div class="setup-screen" id="setupScreen">
+    <div class="setup-logo"><span>T</span>chiBank</div>
+    <div class="ornament">✦ ─────── ✦ ─────── ✦</div>
+    <p class="setup-text">Cole suas credenciais do JSONBin para sincronizar entre dispositivos e diga seu nome.</p>
+    <div class="field-label">X-Master-Key</div>
+    <input class="input" id="suMaster" type="text" placeholder="$2a$10$...">
+    <div class="field-label">X-Access-Key</div>
+    <input class="input" id="suAccess" type="text" placeholder="$2a$10$...">
+    <div class="field-label">Bin ID</div>
+    <input class="input" id="suBin" type="text" placeholder="6xxxxxxxxxxxxxxx">
+    <div class="field-label">Seu nome</div>
+    <input class="input" id="suPessoa" type="text" placeholder="Seu nome">
+    <button class="btn btn-primary btn-block" id="suBtn" style="margin-top:8px">Começar</button>
+    <p class="setup-error" id="suError"></p>
+  </div>
+
+  <!-- ─── Header ─── -->
+  <header class="app-header" id="appHeader" style="display:none">
+    <div class="month-nav">
+      <button id="prevMonth" aria-label="Mês anterior">‹</button>
+      <div class="month-label" id="monthLabel">—</div>
+      <button id="nextMonth" aria-label="Próximo mês">›</button>
+    </div>
+    <div class="header-actions">
+      <div class="sync-indicator"><span class="sync-dot" id="syncDot"></span><span id="syncText">sync</span></div>
+      <button class="icon-btn" id="reloadBtn" aria-label="Recarregar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ─── Mês ─── -->
+  <main class="screen" id="screenMes">
+    <div class="meta-card">
+      <div class="meta-spent" id="metaSpent">R$ 0</div>
+      <div class="meta-of">de <b id="metaGoal">R$ 1.500</b> · meta do mês</div>
+      <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="meta-foot">
+        <span id="metaPct">0%</span>
+        <span id="metaRemain"><b>R$ 1.500</b> restantes</span>
+      </div>
+      <div class="frufrus">
+        <div class="frufru"><div class="frufru-val" id="ffMedia">R$ 0</div><div class="frufru-lbl">Média/semana</div></div>
+        <div class="frufru"><div class="frufru-val" id="ffProj">R$ 0</div><div class="frufru-lbl">Projeção</div></div>
+        <div class="frufru"><div class="frufru-val" id="ffDias">—</div><div class="frufru-lbl">Dias restantes</div></div>
+      </div>
+    </div>
+    <div class="section-title">Lançamentos</div>
+    <div class="gasto-list" id="gastoList"></div>
+  </main>
+
+  <!-- ─── Dashes ─── -->
+  <main class="screen" id="screenDash">
+    <div class="dash-card">
+      <h3>Por categoria · <span id="dashMonthLbl"></span></h3>
+      <div id="dashCategorias"></div>
+    </div>
+    <div class="dash-card">
+      <h3>Evolução mensal</h3>
+      <div class="evo" id="dashEvolucao"></div>
+    </div>
+    <div class="dash-card">
+      <h3>Maiores gastos do mês</h3>
+      <div class="gasto-list" id="dashMaiores"></div>
+    </div>
+  </main>
+
+  <!-- ─── Ajustes ─── -->
+  <main class="screen" id="screenAjustes">
+    <div class="section-title" style="margin-top:14px">Ajustes</div>
+    <div class="setting-group">
+      <h3>Meta do mês</h3>
+      <div class="row-inline">
+        <input class="input" id="setMeta" type="text" inputmode="decimal" placeholder="1500">
+        <button class="btn btn-gold" id="saveMetaBtn">Salvar</button>
+      </div>
+    </div>
+    <div class="setting-group">
+      <h3>Categorias</h3>
+      <div id="catChips" style="margin-bottom:12px"></div>
+      <div class="row-inline">
+        <input class="input" id="newCat" type="text" placeholder="Nova categoria">
+        <button class="btn btn-gold" id="addCatBtn">+</button>
+      </div>
+    </div>
+    <div class="setting-group">
+      <h3>Pessoa</h3>
+      <div class="row-inline">
+        <input class="input" id="setPessoa" type="text" placeholder="Seu nome">
+        <button class="btn btn-gold" id="savePessoaBtn">Salvar</button>
+      </div>
+    </div>
+    <div class="setting-group">
+      <h3>Credenciais JSONBin</h3>
+      <div class="field-label">Master Key</div>
+      <input class="input" id="setMaster" type="text">
+      <div class="field-label">Access Key</div>
+      <input class="input" id="setAccess" type="text">
+      <div class="field-label">Bin ID</div>
+      <input class="input" id="setBin" type="text">
+      <button class="btn btn-gold btn-block" id="saveCredsBtn">Salvar credenciais</button>
+      <button class="btn btn-ghost btn-block" id="forceSyncBtn" style="margin-top:10px">Baixar do servidor</button>
+    </div>
+  </main>
+
+  <!-- ─── FAB ─── -->
+  <button class="fab" id="fab" style="display:none">+</button>
+
+  <!-- ─── Tab bar ─── -->
+  <nav class="tab-bar" id="tabBar" style="display:none">
+    <button class="tab-item active" data-screen="screenMes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+      <span>Mês</span>
+    </button>
+    <button class="tab-item" data-screen="screenDash">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>Dashes</span>
+    </button>
+    <button class="tab-item" data-screen="screenAjustes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      <span>Ajustes</span>
+    </button>
+  </nav>
+
+  <!-- ─── Modal gasto ─── -->
+  <div class="overlay" id="gastoOverlay">
+    <div class="modal">
+      <div class="modal-title" id="gastoModalTitle">Novo gasto</div>
+      <div class="ornament">✦ ─── ✦ ─── ✦</div>
+      <div class="field-label">Valor (R$)</div>
+      <input class="input" id="gValor" type="text" inputmode="decimal" placeholder="0,00">
+      <div class="field-label">Data</div>
+      <input class="input" id="gData" type="date">
+      <div class="field-label">Categoria</div>
+      <select class="input" id="gCategoria"></select>
+      <input class="input" id="gNovaCat" type="text" placeholder="Nome da nova categoria" style="display:none">
+      <div class="field-label">Observação</div>
+      <textarea class="input" id="gObs" placeholder="opcional"></textarea>
+      <div class="readonly-field">Lançado por: <b id="gPessoa">—</b></div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" id="gCancel">Cancelar</button>
+        <button class="btn btn-primary" id="gSave">Salvar</button>
+      </div>
+      <button class="btn btn-danger btn-block" id="gDelete" style="margin-top:10px; display:none">Excluir gasto</button>
+    </div>
+  </div>
+
+  <!-- ─── Confirm dialog ─── -->
+  <div class="overlay" id="confirmOverlay">
+    <div class="confirm-box">
+      <div class="confirm-msg" id="confirmMsg">Tem certeza?</div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" id="confirmNo">Não</button>
+        <button class="btn btn-danger" id="confirmYes">Sim</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    'use strict';
+
+    const KEYS = {
+      master: 'tchibank_master_key',
+      access: 'tchibank_access_key',
+      bin: 'tchibank_bin_id',
+      pessoa: 'tchibank_pessoa',
+      data: 'tchibank_data',
+      lastSync: 'tchibank_last_sync'
+    };
+    const DEFAULT_META = 1500;
+    const API = 'https://api.jsonbin.io/v3/b';
+
+    let data = { meta: {}, categorias: [], gastos: {} };
+    let pessoa = '';
+    let viewDate = new Date();          // qualquer dia do mês visualizado
+    viewDate.setDate(1);
+    let editingId = null;
+    let confirmCallback = null;
+    let busy = false; // bloqueia operações de rede concorrentes (duplo-clique etc)
+
+    // ─── Helpers ───
+    const $ = (id) => document.getElementById(id);
+    const pad = (n) => String(n).padStart(2, '0');
+    const monthKey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+    const brl = (v) => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 });
+    const brl0 = (v) => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+    const uid = () => Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+    const nowISO = () => new Date().toISOString();
+    const monthName = (d) => d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    const toDateInput = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    function defaultDateForView() {
+      const now = new Date();
+      // mês atual → hoje; outro mês → dia 1 do mês visualizado
+      return monthKey(viewDate) === monthKey(now) ? toDateInput(now) : toDateInput(viewDate);
+    }
+    function dateInputToISO(s) {
+      const [y, m, d] = s.split('-').map(Number);
+      return new Date(y, m - 1, d, 12, 0, 0).toISOString(); // meio-dia evita shift de fuso
+    }
+    function mondayOf(d) {
+      const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); // recua até a segunda
+      return x;
+    }
+
+    function parseValor(s) {
+      if (!s) return 0;
+      s = String(s).trim();
+      if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+      const n = parseFloat(s.replace(/[^\d.-]/g, ''));
+      return isNaN(n) ? 0 : Math.abs(n);
+    }
+
+    function getMeta(mk) {
+      return data.meta[mk] != null ? data.meta[mk] : DEFAULT_META;
+    }
+    function activeGastos() {
+      return Object.values(data.gastos).filter(Boolean);
+    }
+    function gastosDoMes(mk) {
+      return activeGastos().filter((g) => g.mes === mk).sort((a, b) => new Date(b.data) - new Date(a.data));
+    }
+    function totalDoMes(mk) {
+      return gastosDoMes(mk).reduce((s, g) => s + g.valor, 0);
+    }
+
+    // ─── localStorage ───
+    function loadLocal() {
+      try {
+        const raw = localStorage.getItem(KEYS.data);
+        data = normalize(raw ? JSON.parse(raw) : null);
+      } catch (e) { data = normalize(null); }
+      pessoa = localStorage.getItem(KEYS.pessoa) || '';
+    }
+    function saveLocal() { localStorage.setItem(KEYS.data, JSON.stringify(data)); }
+
+    // ─── Sync (JSONBin) ───
+    function creds() {
+      return {
+        master: localStorage.getItem(KEYS.master),
+        access: localStorage.getItem(KEYS.access),
+        bin: localStorage.getItem(KEYS.bin)
+      };
+    }
+    function hasCreds() { const c = creds(); return c.master && c.access && c.bin; }
+
+    function setSync(status) {
+      const dot = $('syncDot'), txt = $('syncText');
+      dot.className = 'sync-dot';
+      const map = { online: ['', 'sync'], syncing: ['syncing', '...'], offline: ['offline', 'offline'], error: ['error', 'erro'] };
+      const [cls, label] = map[status] || ['', ''];
+      if (cls) dot.classList.add(cls);
+      txt.textContent = label;
+    }
+
+    // Normaliza qualquer record (local ou remoto, formato antigo ou novo) para { meta, categorias, gastos }.
+    // Converte meta antiga {valor,updatedAt}->valor e descarta tombstones (deleted) e updatedAt.
+    function normMeta(m) {
+      const out = {};
+      for (const k in (m || {})) { const v = m[k]; out[k] = (v && typeof v === 'object') ? v.valor : v; }
+      return out;
+    }
+    function normalize(r) {
+      r = r || {};
+      const gastos = {};
+      for (const id in (r.gastos || {})) {
+        const g = r.gastos[id];
+        if (g && !g.deleted) {
+          gastos[id] = { id: g.id || id, valor: g.valor, categoria: g.categoria, obs: g.obs || '', pessoa: g.pessoa || '', data: g.data, mes: g.mes };
+        }
+      }
+      return { meta: normMeta(r.meta), categorias: Array.isArray(r.categorias) ? r.categorias : [], gastos };
+    }
+
+    async function fetchRemote() {
+      const c = creds();
+      const res = await fetch(`${API}/${c.bin}/latest`, {
+        headers: { 'X-Master-Key': c.master, 'X-Access-Key': c.access },
+        cache: 'no-store'
+      });
+      if (!res.ok) { const err = new Error('GET ' + res.status); if (res.status === 404) err.notFound = true; throw err; }
+      const json = await res.json();
+      return normalize(json.record);
+    }
+
+    // Leitura: o bin é a fonte de verdade. Substitui o estado local pelo remoto.
+    async function pullRemote() {
+      if (busy || !hasCreds()) { if (!hasCreds()) setSync('offline'); return; }
+      busy = true;
+      setSync('syncing');
+      try {
+        data = await fetchRemote();
+        saveLocal();
+        renderAll();
+        if ($('screenAjustes').classList.contains('active')) renderAjustes();
+        setSync('online');
+      } catch (e) {
+        if (e && e.notFound) { setSync('error'); toast('Bin não encontrado — confira o ID'); }
+        else setSync('offline');
+      } finally { busy = false; }
+    }
+
+    // Escrita: lê o estado fresco do bin, aplica SÓ esta operação e grava. Sem rede = não grava.
+    async function commitRemote(apply) {
+      if (busy) return false;
+      if (!hasCreds()) { toast('Configure as credenciais'); return false; }
+      busy = true;
+      setSync('syncing');
+      try {
+        let estado;
+        try {
+          estado = await fetchRemote();
+        } catch (e) {
+          if (e && e.notFound) { setSync('error'); toast('Bin não encontrado — confira o ID'); }
+          else { setSync('offline'); toast('Sem conexão — não foi salvo'); }
+          return false;
+        }
+        apply(estado);
+        const c = creds();
+        const putRes = await fetch(`${API}/${c.bin}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'X-Master-Key': c.master, 'X-Access-Key': c.access },
+          body: JSON.stringify(estado)
+        });
+        if (!putRes.ok) throw new Error('PUT ' + putRes.status);
+        data = estado;
+        saveLocal();
+        localStorage.setItem(KEYS.lastSync, nowISO());
+        renderAll();
+        setSync('online');
+        return true;
+      } catch (e) { setSync('error'); toast('Erro ao salvar — tente de novo'); return false; }
+      finally { busy = false; }
+    }
+
+    // ─── Render ───
+    function renderAll() {
+      renderHeader();
+      renderMes();
+      renderDash();
+    }
+
+    function renderHeader() {
+      $('monthLabel').textContent = monthName(viewDate);
+    }
+
+    function renderMes() {
+      const mk = monthKey(viewDate);
+      const meta = getMeta(mk);
+      const total = totalDoMes(mk);
+      const pct = meta > 0 ? (total / meta) * 100 : 0;
+
+      $('metaSpent').textContent = brl(total);
+      $('metaGoal').textContent = brl0(meta);
+      $('metaPct').textContent = Math.round(pct) + '%';
+
+      const fill = $('progressFill');
+      fill.style.width = Math.min(pct, 100) + '%';
+      fill.className = 'progress-fill' + (pct > 100 ? ' over' : pct >= 70 ? ' warn' : '');
+
+      const remain = meta - total;
+      $('metaRemain').innerHTML = remain >= 0
+        ? `<b>${brl0(remain)}</b> restantes`
+        : `<span class="over-txt"><b>${brl0(-remain)}</b> acima</span>`;
+
+      // frufrus
+      const now = new Date();
+      const nowMk = monthKey(now);
+      const isCurrent = mk === nowMk;
+      const isFuture = mk > nowMk;
+      const daysInMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
+      const elapsed = isCurrent ? now.getDate() : (isFuture ? 0 : daysInMonth);
+      const mediaDia = elapsed > 0 ? total / elapsed : 0;
+      const proj = isFuture ? 0 : (isCurrent ? mediaDia * daysInMonth : total);
+      const diasRest = isCurrent ? (daysInMonth - now.getDate()) : (isFuture ? daysInMonth : 0);
+
+      // média semanal: total / nº de semanas (seg→dom) tocadas pelo período do mês
+      const ini = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+      const fim = isCurrent ? new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        : (isFuture ? ini : new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0));
+      const semanas = Math.max(1, Math.floor((mondayOf(fim) - mondayOf(ini)) / 6048e5) + 1);
+      const mediaSemana = total / semanas;
+
+      $('ffMedia').textContent = brl0(mediaSemana);
+      $('ffProj').textContent = brl0(proj);
+      $('ffDias').textContent = diasRest;
+
+      // lista
+      const list = $('gastoList');
+      const gastos = gastosDoMes(mk);
+      if (!gastos.length) {
+        list.innerHTML = '<div class="empty">Nenhum lançamento neste mês.</div>';
+      } else {
+        list.innerHTML = gastos.map((g) => {
+          const dia = new Date(g.data).getDate();
+          const obs = g.obs ? ' · ' + escapeHtml(g.obs) : '';
+          return `<div class="gasto-item" data-id="${g.id}">
+            <div class="gasto-cat">
+              <div class="gasto-cat-name">${escapeHtml(g.categoria)}</div>
+              <div class="gasto-meta">dia ${dia} · ${escapeHtml(g.pessoa || '—')}${obs}</div>
+            </div>
+            <div class="gasto-val">${brl(g.valor)}</div>
+          </div>`;
+        }).join('');
+        list.querySelectorAll('.gasto-item').forEach((el) =>
+          el.addEventListener('click', () => openGasto(el.dataset.id))
+        );
+      }
+    }
+
+    function renderDash() {
+      const mk = monthKey(viewDate);
+      $('dashMonthLbl').textContent = monthName(viewDate);
+      const gastos = gastosDoMes(mk);
+
+      // Por categoria
+      const byCat = {};
+      gastos.forEach((g) => { byCat[g.categoria] = (byCat[g.categoria] || 0) + g.valor; });
+      const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+      const maxCat = cats.length ? cats[0][1] : 0;
+      $('dashCategorias').innerHTML = cats.length
+        ? cats.map(([c, v]) => `<div class="bar-row">
+            <div class="bar-head"><span>${escapeHtml(c)}</span><span class="v">${brl(v)}</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width:${maxCat ? (v / maxCat) * 100 : 0}%"></div></div>
+          </div>`).join('')
+        : '<div class="empty">Sem dados.</div>';
+
+      // Evolução: 6 meses terminando no mês visualizado
+      const months = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(viewDate.getFullYear(), viewDate.getMonth() - i, 1);
+        months.push(d);
+      }
+      const totals = months.map((d) => ({ d, total: totalDoMes(monthKey(d)), meta: getMeta(monthKey(d)) }));
+      const maxTotal = Math.max(1, ...totals.map((t) => t.total));
+      $('dashEvolucao').innerHTML = totals.map((t) => {
+        const h = (t.total / maxTotal) * 100;
+        const over = t.total > t.meta;
+        const lbl = t.d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+        return `<div class="evo-col">
+          <div class="evo-val">${t.total ? brl0(t.total) : ''}</div>
+          <div class="evo-bar-wrap"><div class="evo-bar ${over ? 'over' : ''}" style="height:${h}%"></div></div>
+          <div class="evo-lbl">${lbl}</div>
+        </div>`;
+      }).join('');
+
+      // Maiores gastos
+      const maiores = [...gastos].sort((a, b) => b.valor - a.valor).slice(0, 10);
+      $('dashMaiores').innerHTML = maiores.length
+        ? maiores.map((g) => `<div class="gasto-item" data-id="${g.id}">
+            <div class="gasto-cat">
+              <div class="gasto-cat-name">${escapeHtml(g.categoria)}</div>
+              <div class="gasto-meta">dia ${new Date(g.data).getDate()} · ${escapeHtml(g.pessoa || '—')}</div>
+            </div>
+            <div class="gasto-val">${brl(g.valor)}</div>
+          </div>`).join('')
+        : '<div class="empty">Sem dados.</div>';
+      $('dashMaiores').querySelectorAll('.gasto-item').forEach((el) =>
+        el.addEventListener('click', () => openGasto(el.dataset.id))
+      );
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    // ─── Modal gasto ───
+    function fillCatSelect(selected) {
+      const sel = $('gCategoria');
+      const cats = [...data.categorias];
+      if (selected && !cats.includes(selected)) cats.unshift(selected);
+      const opts = cats.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+      sel.innerHTML = opts + '<option value="__nova__">+ Nova categoria</option>';
+      sel.value = selected && cats.includes(selected) ? selected : (cats[0] || '__nova__');
+      toggleNovaCat();
+    }
+    function toggleNovaCat() {
+      $('gNovaCat').style.display = $('gCategoria').value === '__nova__' ? 'block' : 'none';
+    }
+
+    function openGasto(id) {
+      editingId = id || null;
+      const g = id ? data.gastos[id] : null;
+      $('gastoModalTitle').textContent = g ? 'Editar gasto' : 'Novo gasto';
+      $('gValor').value = g ? String(g.valor).replace('.', ',') : '';
+      $('gData').value = g ? toDateInput(new Date(g.data)) : defaultDateForView();
+      fillCatSelect(g ? g.categoria : null);
+      $('gObs').value = g ? (g.obs || '') : '';
+      $('gNovaCat').value = '';
+      $('gPessoa').textContent = g ? (g.pessoa || pessoa) : pessoa;
+      $('gDelete').style.display = g ? 'block' : 'none';
+      $('gastoOverlay').classList.add('active');
+    }
+    function closeGasto() { $('gastoOverlay').classList.remove('active'); editingId = null; }
+
+    async function saveGasto() {
+      const valor = parseValor($('gValor').value);
+      if (valor <= 0) { toast('Informe um valor válido'); return; }
+      let categoria = $('gCategoria').value;
+      if (categoria === '__nova__') {
+        categoria = $('gNovaCat').value.trim();
+        if (!categoria) { toast('Dê um nome à categoria'); return; }
+      }
+      const obs = $('gObs').value.trim();
+      const dataVal = $('gData').value;
+      if (!dataVal) { toast('Informe a data'); return; }
+      const dataISO = dateInputToISO(dataVal);
+      const mes = dataVal.slice(0, 7);
+      const id = editingId;
+      const pessoaOrig = (id && data.gastos[id] && data.gastos[id].pessoa) || pessoa;
+
+      const ok = await commitRemote((estado) => {
+        if (!estado.categorias.includes(categoria)) estado.categorias.push(categoria);
+        if (id) {
+          estado.gastos[id] = { id, valor, categoria, obs, pessoa: pessoaOrig, data: dataISO, mes };
+        } else {
+          const nid = uid();
+          estado.gastos[nid] = { id: nid, valor, categoria, obs, pessoa, data: dataISO, mes };
+        }
+      });
+      if (ok) { closeGasto(); toast('Salvo ✦'); }
+    }
+
+    function deleteGasto() {
+      if (!editingId) return;
+      const id = editingId;
+      confirmDialog('Excluir este gasto?', async () => {
+        const ok = await commitRemote((estado) => { delete estado.gastos[id]; });
+        if (ok) { closeGasto(); toast('Excluído'); }
+      });
+    }
+
+    // ─── Confirm ───
+    function confirmDialog(msg, cb) {
+      $('confirmMsg').textContent = msg;
+      confirmCallback = cb;
+      $('confirmOverlay').classList.add('active');
+    }
+    function closeConfirm() { $('confirmOverlay').classList.remove('active'); confirmCallback = null; }
+
+    // ─── Toast ───
+    let toastTimer;
+    function toast(msg) {
+      const t = $('toast');
+      t.textContent = msg;
+      t.classList.add('visible');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('visible'), 2000);
+    }
+
+    // ─── Ajustes ───
+    function renderAjustes() {
+      $('setMeta').value = String(getMeta(monthKey(viewDate))).replace('.', ',');
+      $('setPessoa').value = pessoa;
+      const c = creds();
+      $('setMaster').value = c.master || '';
+      $('setAccess').value = c.access || '';
+      $('setBin').value = c.bin || '';
+      renderCatChips();
+    }
+    function renderCatChips() {
+      $('catChips').innerHTML = data.categorias.map((c, i) =>
+        `<span class="cat-chip">${escapeHtml(c)}<button data-i="${i}" aria-label="Remover">×</button></span>`
+      ).join('');
+      $('catChips').querySelectorAll('button').forEach((b) =>
+        b.addEventListener('click', async () => {
+          const cat = data.categorias[+b.dataset.i];
+          const ok = await commitRemote((estado) => {
+            const i = estado.categorias.indexOf(cat);
+            if (i >= 0) estado.categorias.splice(i, 1);
+          });
+          if (ok) renderCatChips();
+        })
+      );
+    }
+
+    // ─── Navegação de tabs ───
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('active', s.id === id));
+      document.querySelectorAll('.tab-item').forEach((t) => t.classList.toggle('active', t.dataset.screen === id));
+      $('fab').style.display = id === 'screenMes' ? 'flex' : 'none';
+      $('appHeader').style.display = (id === 'screenAjustes') ? 'none' : 'flex';
+      if (id === 'screenAjustes') renderAjustes();
+      if (id === 'screenDash') renderDash();
+    }
+
+    // ─── Setup / init ───
+    function showApp() {
+      $('setupScreen').classList.remove('active');
+      $('appHeader').style.display = 'flex';
+      $('tabBar').style.display = 'flex';
+      $('fab').style.display = 'flex';
+      loadLocal();
+      renderAll();
+      showScreen('screenMes');
+      pullRemote();
+    }
+
+    function init() {
+      const c = creds();
+      pessoa = localStorage.getItem(KEYS.pessoa) || '';
+      if (c.master && c.access && c.bin && pessoa) {
+        showApp();
+      } else {
+        $('setupScreen').classList.add('active');
+      }
+    }
+
+    // ─── Listeners ───
+    $('suBtn').addEventListener('click', () => {
+      const m = $('suMaster').value.trim(), a = $('suAccess').value.trim(), b = $('suBin').value.trim(), p = $('suPessoa').value.trim();
+      if (!m || !a || !b || !p) { $('suError').textContent = 'Preencha todos os campos.'; return; }
+      localStorage.setItem(KEYS.master, m);
+      localStorage.setItem(KEYS.access, a);
+      localStorage.setItem(KEYS.bin, b);
+      localStorage.setItem(KEYS.pessoa, p);
+      $('suError').textContent = '';
+      showApp();
+    });
+
+    $('prevMonth').addEventListener('click', () => { viewDate.setMonth(viewDate.getMonth() - 1); renderAll(); });
+    $('nextMonth').addEventListener('click', () => { viewDate.setMonth(viewDate.getMonth() + 1); renderAll(); });
+    $('reloadBtn').addEventListener('click', () => pullRemote());
+
+    $('fab').addEventListener('click', () => openGasto(null));
+    $('gCancel').addEventListener('click', closeGasto);
+    $('gSave').addEventListener('click', saveGasto);
+    $('gDelete').addEventListener('click', deleteGasto);
+    $('gCategoria').addEventListener('change', toggleNovaCat);
+    $('gastoOverlay').addEventListener('click', (e) => { if (e.target.id === 'gastoOverlay') closeGasto(); });
+
+    $('confirmNo').addEventListener('click', closeConfirm);
+    $('confirmYes').addEventListener('click', () => { const cb = confirmCallback; closeConfirm(); if (cb) cb(); });
+    $('confirmOverlay').addEventListener('click', (e) => { if (e.target.id === 'confirmOverlay') closeConfirm(); });
+
+    document.querySelectorAll('.tab-item').forEach((t) =>
+      t.addEventListener('click', () => showScreen(t.dataset.screen))
+    );
+
+    $('saveMetaBtn').addEventListener('click', async () => {
+      const v = parseValor($('setMeta').value);
+      if (v <= 0) { toast('Valor inválido'); return; }
+      const mk = monthKey(viewDate);
+      const ok = await commitRemote((estado) => { estado.meta[mk] = v; });
+      if (ok) toast('Meta salva ✦');
+    });
+    $('addCatBtn').addEventListener('click', async () => {
+      const c = $('newCat').value.trim();
+      if (!c) return;
+      const ok = await commitRemote((estado) => { if (!estado.categorias.includes(c)) estado.categorias.push(c); });
+      if (ok) { $('newCat').value = ''; renderCatChips(); }
+    });
+    $('savePessoaBtn').addEventListener('click', () => {
+      const p = $('setPessoa').value.trim();
+      if (!p) { toast('Informe um nome'); return; }
+      pessoa = p; localStorage.setItem(KEYS.pessoa, p); toast('Nome salvo');
+    });
+    $('saveCredsBtn').addEventListener('click', () => {
+      localStorage.setItem(KEYS.master, $('setMaster').value.trim());
+      localStorage.setItem(KEYS.access, $('setAccess').value.trim());
+      localStorage.setItem(KEYS.bin, $('setBin').value.trim());
+      toast('Credenciais salvas'); pullRemote();
+    });
+    $('forceSyncBtn').addEventListener('click', () => { pullRemote(); toast('Baixando do servidor...'); });
+
+    // ─── Boot ───
+    init();
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+    }
+  </script>
+</body>
+</html>
