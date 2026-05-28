@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tchibank-v4';
+const CACHE_NAME = 'tchibank-v5';
 const ASSETS = [
   './',
   './index.html',

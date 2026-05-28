@@ -171,7 +171,7 @@
       background: rgba(31,95,204,.93); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
       border-top: 1px solid rgba(255,255,255,0.12);
     }
-    .tab-item { background: none; border: none; color: rgba(255,243,205,0.6); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px 18px; font-family: var(--font-body); font-size: 11px; transition: color .2s; }
+    .tab-item { background: none; border: none; color: rgba(255,243,205,0.6); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px 12px; font-family: var(--font-body); font-size: 11px; transition: color .2s; }
     .tab-item svg { width: 22px; height: 22px; }
     .tab-item.active { color: var(--yellow); }
 
@@ -225,6 +225,33 @@
     /* ─── Toast ─── */
     .toast { position: fixed; bottom: calc(90px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface-2); border: 1px solid var(--blue); color: var(--text); padding: 11px 22px; border-radius: 24px; font-size: 14px; opacity: 0; pointer-events: none; transition: all .3s; z-index: 300; }
     .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ─── Cofres ─── */
+    .cofre-item {
+      display: block; padding: 14px; background: var(--surface);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer;
+      transition: border-color .15s; box-shadow: 0 2px 10px rgba(31,95,204,0.05);
+    }
+    .cofre-item:active { border-color: var(--blue); }
+    .cofre-item.arquivado { opacity: .6; }
+    .cofre-item.done { border-color: var(--ok); }
+    .cofre-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 9px; }
+    .cofre-nome { font-weight: 700; font-size: 15.5px; }
+    .cofre-vals { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--blue); white-space: nowrap; }
+    .cofre-pct { font-size: 12px; color: var(--text-muted); margin-top: 5px; text-align: right; }
+    .cofre-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); background: var(--bg-deep); padding: 2px 7px; border-radius: 10px; vertical-align: middle; }
+    .cofre-badge.ok { color: var(--ok); background: rgba(46,158,107,0.14); }
+
+    .cofre-prog { margin-top: 18px; }
+    .cofre-prog-head { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-muted); margin-bottom: 5px; }
+    .cofre-prog-head b { color: var(--blue); font-weight: 600; }
+    .cofre-warn { color: #b5820a; font-size: 12.5px; min-height: 16px; margin: 6px 2px 0; }
+    .aportes-list { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; }
+    .aporte-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+    .aporte-info { flex: 1; font-size: 13px; color: var(--text-muted); }
+    .aporte-val { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--blue); }
+    .aporte-del { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 18px; line-height: 1; padding: 0 4px; }
   </style>
 </head>
 <body>
@@ -297,6 +324,20 @@
     </div>
   </main>
 
+  <!-- ─── Cofres ─── -->
+  <main class="screen" id="screenCofres">
+    <div class="meta-card" style="padding:20px">
+      <div class="meta-spent" style="color:var(--blue);font-size:38px" id="cofrePoupado">R$ 0</div>
+      <div class="meta-of">guardado em <b id="cofreCount">0</b> cofrinho(s)</div>
+    </div>
+    <div class="section-title">Cofrinhos</div>
+    <div class="gasto-list" id="cofreList"></div>
+    <div id="cofreArquivadosWrap" style="display:none">
+      <div class="section-title">Resgatados</div>
+      <div class="gasto-list" id="cofreArquivados"></div>
+    </div>
+  </main>
+
   <!-- ─── Ajustes ─── -->
   <main class="screen" id="screenAjustes">
     <div class="section-title" style="margin-top:14px">Ajustes</div>
@@ -348,6 +389,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       <span>Dashes</span>
     </button>
+    <button class="tab-item" data-screen="screenCofres">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5c-1.5 0-2.8 1.4-3 3.5"/><path d="M16 8.5c-3.5-1.5-11-.3-11 5 0 1.8.6 3 2 4.5V20h3v-1.5a8 8 0 005 0V20h3v-2.5c.8-.7 1.5-1.5 1.5-2.5h1.5v-3.5H21c0-1.4-.6-2.6-1.5-3.5"/><path d="M2 11v1a2 2 0 002 2h1"/><path d="M16 12h.01"/></svg>
+      <span>Cofres</span>
+    </button>
     <button class="tab-item" data-screen="screenAjustes">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       <span>Ajustes</span>
@@ -374,6 +419,44 @@
         <button class="btn btn-primary" id="gSave">Salvar</button>
       </div>
       <button class="btn btn-danger btn-block" id="gDelete" style="margin-top:10px; display:none">Excluir gasto</button>
+    </div>
+  </div>
+
+  <!-- ─── Modal cofre ─── -->
+  <div class="overlay" id="cofreOverlay">
+    <div class="modal">
+      <div class="modal-title" id="cofreModalTitle">Novo cofrinho</div>
+      <div class="ornament">•   •   •</div>
+      <div class="field-label">Nome</div>
+      <input class="input" id="cfNome" type="text" placeholder="Viagem de fim de ano">
+      <div class="field-label">Meta / alvo (R$) — opcional</div>
+      <input class="input" id="cfAlvo" type="text" inputmode="decimal" placeholder="5000">
+
+      <div id="cofreManage" style="display:none">
+        <div class="cofre-prog">
+          <div class="cofre-prog-head"><span>Progresso</span><b id="cfProgVals">R$ 0</b></div>
+          <div class="bar-track"><div class="bar-fill" id="cfProgFill" style="width:0%"></div></div>
+        </div>
+
+        <div class="field-label" style="margin-top:18px">Guardar na sobra</div>
+        <div class="row-inline">
+          <input class="input" id="cfAporte" type="text" inputmode="decimal" placeholder="0,00">
+          <input class="input" id="cfAporteData" type="date" style="max-width:160px">
+          <button class="btn btn-blue" id="cfAporteBtn">Guardar</button>
+        </div>
+        <div class="cofre-warn" id="cfAporteWarn"></div>
+
+        <div class="field-label" style="margin-top:14px">Aportes</div>
+        <div id="cfAportesList" class="aportes-list"></div>
+
+        <button class="btn btn-ghost btn-block" id="cfResgatar" style="margin-top:16px">Resgatar (arquivar)</button>
+        <button class="btn btn-danger btn-block" id="cfDelete" style="margin-top:10px">Excluir cofrinho</button>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-ghost" id="cfCancel">Cancelar</button>
+        <button class="btn btn-primary" id="cfSave">Salvar</button>
+      </div>
     </div>
   </div>
 
@@ -404,11 +487,12 @@
     const DEFAULT_META = 1500;
     const API = 'https://api.jsonbin.io/v3/b';
 
-    let data = { meta: {}, categorias: [], gastos: {} };
+    let data = { meta: {}, categorias: [], gastos: {}, cofres: {} };
     let pessoa = '';
     let viewDate = new Date();          // qualquer dia do mês visualizado
     viewDate.setDate(1);
     let editingId = null;
+    let editingCofreId = null;
     let confirmCallback = null;
     let busy = false; // bloqueia operações de rede concorrentes (duplo-clique etc)
 
@@ -458,6 +542,25 @@
       return gastosDoMes(mk).reduce((s, g) => s + g.valor, 0);
     }
 
+    // ─── Cofres ───
+    function activeCofres() {
+      return Object.values(data.cofres || {}).filter(Boolean);
+    }
+    function aportesDe(cf) {
+      return Object.values((cf && cf.aportes) || {}).filter(Boolean);
+    }
+    function saldoCofre(cf) {
+      return aportesDe(cf).reduce((s, a) => s + a.valor, 0);
+    }
+    // total aportado (em todos os cofres) carimbado neste mês
+    function aportesDoMes(mk) {
+      return activeCofres().reduce((s, cf) =>
+        s + aportesDe(cf).filter((a) => a.mes === mk).reduce((x, a) => x + a.valor, 0), 0);
+    }
+    function sobraDoMes(mk) {
+      return getMeta(mk) - totalDoMes(mk);
+    }
+
     // ─── localStorage ───
     function loadLocal() {
       try {
@@ -503,7 +606,21 @@
           gastos[id] = { id: g.id || id, valor: g.valor, categoria: g.categoria, obs: g.obs || '', pessoa: g.pessoa || '', data: g.data, mes: g.mes };
         }
       }
-      return { meta: normMeta(r.meta), categorias: Array.isArray(r.categorias) ? r.categorias : [], gastos };
+      const cofres = {};
+      for (const id in (r.cofres || {})) {
+        const cf = r.cofres[id];
+        if (cf && !cf.deleted) {
+          const aportes = {};
+          for (const aid in (cf.aportes || {})) {
+            const a = cf.aportes[aid];
+            if (a && !a.deleted) {
+              aportes[aid] = { id: a.id || aid, valor: a.valor, mes: a.mes, data: a.data, obs: a.obs || '' };
+            }
+          }
+          cofres[id] = { id: cf.id || id, nome: cf.nome || '', alvo: cf.alvo || 0, criadoEm: cf.criadoEm, arquivado: !!cf.arquivado, aportes };
+        }
+      }
+      return { meta: normMeta(r.meta), categorias: Array.isArray(r.categorias) ? r.categorias : [], gastos, cofres };
     }
 
     async function fetchRemote() {
@@ -572,6 +689,7 @@
       renderHeader();
       renderMes();
       renderDash();
+      renderCofres();
     }
 
     function renderHeader() {
@@ -698,6 +816,196 @@
       return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
 
+    // ─── Render Cofres ───
+    function renderCofres() {
+      const cofres = activeCofres();
+      const ativos = cofres.filter((c) => !c.arquivado);
+      const arquivados = cofres.filter((c) => c.arquivado);
+      const totalPoupado = ativos.reduce((s, c) => s + saldoCofre(c), 0);
+
+      $('cofrePoupado').textContent = brl0(totalPoupado);
+      $('cofreCount').textContent = ativos.length;
+
+      function cardHtml(c, arq) {
+        const saldo = saldoCofre(c);
+        const alvo = c.alvo || 0;
+        const pct = alvo > 0 ? Math.min((saldo / alvo) * 100, 100) : (saldo > 0 ? 100 : 0);
+        const atingiu = alvo > 0 && saldo >= alvo;
+        return `<div class="cofre-item${arq ? ' arquivado' : ''}${atingiu && !arq ? ' done' : ''}" data-id="${c.id}">
+          <div class="cofre-head">
+            <span class="cofre-nome">${escapeHtml(c.nome)}${arq ? ' <span class="cofre-badge">resgatado</span>' : (atingiu ? ' <span class="cofre-badge ok">meta!</span>' : '')}</span>
+            <span class="cofre-vals">${brl0(saldo)}${alvo > 0 ? ' / ' + brl0(alvo) : ''}</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+          <div class="cofre-pct">${Math.round(pct)}%</div>
+        </div>`;
+      }
+
+      const listAtivos = $('cofreList');
+      listAtivos.innerHTML = ativos.length
+        ? ativos.map((c) => cardHtml(c, false)).join('')
+        : '<div class="empty">Nenhum cofrinho ainda. Toque em + para criar.</div>';
+
+      const listArq = $('cofreArquivados');
+      const wrapArq = $('cofreArquivadosWrap');
+      if (arquivados.length) {
+        wrapArq.style.display = 'block';
+        listArq.innerHTML = arquivados.map((c) => cardHtml(c, true)).join('');
+      } else {
+        wrapArq.style.display = 'none';
+        listArq.innerHTML = '';
+      }
+
+      $('screenCofres').querySelectorAll('.cofre-item').forEach((el) =>
+        el.addEventListener('click', () => openCofre(el.dataset.id))
+      );
+    }
+
+    // ─── Modal Cofre ───
+    function openCofre(id) {
+      editingCofreId = id || null;
+      const c = id ? data.cofres[id] : null;
+      $('cofreModalTitle').textContent = c ? 'Cofrinho' : 'Novo cofrinho';
+      $('cfNome').value = c ? c.nome : '';
+      $('cfAlvo').value = c ? (c.alvo ? String(c.alvo).replace('.', ',') : '') : '';
+      // bloco de gestão (aportes/resgatar/excluir) só na edição
+      $('cofreManage').style.display = c ? 'block' : 'none';
+      if (c) {
+        $('cfAporteData').value = defaultDateForView();
+        $('cfAporte').value = '';
+        renderCofreManage(c);
+      }
+      $('cofreOverlay').classList.add('active');
+    }
+    function closeCofre() { $('cofreOverlay').classList.remove('active'); editingCofreId = null; }
+
+    function renderCofreManage(c) {
+      const saldo = saldoCofre(c);
+      const alvo = c.alvo || 0;
+      const pct = alvo > 0 ? Math.min((saldo / alvo) * 100, 100) : (saldo > 0 ? 100 : 0);
+      $('cfProgVals').textContent = `${brl0(saldo)}${alvo > 0 ? ' de ' + brl0(alvo) : ''}`;
+      $('cfProgFill').style.width = pct + '%';
+
+      $('cfResgatar').textContent = c.arquivado ? 'Reativar' : 'Resgatar (arquivar)';
+      updateAporteWarn();
+
+      const aportes = aportesDe(c).sort((a, b) => new Date(b.data) - new Date(a.data));
+      const list = $('cfAportesList');
+      list.innerHTML = aportes.length
+        ? aportes.map((a) => {
+          const d = new Date(a.data);
+          return `<div class="aporte-row" data-aid="${a.id}">
+            <span class="aporte-info">dia ${d.getDate()}/${pad(d.getMonth() + 1)}</span>
+            <span class="aporte-val">${brl(a.valor)}</span>
+            <button class="aporte-del" data-aid="${a.id}" aria-label="Remover aporte">×</button>
+          </div>`;
+        }).join('')
+        : '<div class="empty" style="padding:14px">Sem aportes ainda.</div>';
+      list.querySelectorAll('.aporte-del').forEach((b) =>
+        b.addEventListener('click', () => removerAporte(b.dataset.aid))
+      );
+    }
+
+    // aviso (não bloqueia): aporte deste mês ultrapassa a sobra do mês?
+    function updateAporteWarn() {
+      const dataVal = $('cfAporteData').value;
+      const v = parseValor($('cfAporte').value);
+      const warn = $('cfAporteWarn');
+      if (!dataVal || v <= 0) { warn.textContent = ''; return; }
+      const mk = dataVal.slice(0, 7);
+      const sobra = sobraDoMes(mk);
+      const jaAportado = aportesDoMes(mk);
+      if (jaAportado + v > sobra) {
+        warn.textContent = `Ultrapassa a sobra de ${brl0(sobra)} de ${mk.split('-').reverse().join('/')} (já guardado: ${brl0(jaAportado)}).`;
+      } else {
+        warn.textContent = '';
+      }
+    }
+
+    async function saveCofre() {
+      const nome = $('cfNome').value.trim();
+      if (!nome) { toast('Dê um nome ao cofrinho'); return; }
+      const alvo = parseValor($('cfAlvo').value);
+      const id = editingCofreId;
+      const ok = await commitRemote((estado) => {
+        estado.cofres = estado.cofres || {};
+        if (id && estado.cofres[id]) {
+          estado.cofres[id].nome = nome;
+          estado.cofres[id].alvo = alvo;
+        } else if (!id) {
+          const nid = uid();
+          estado.cofres[nid] = { id: nid, nome, alvo, criadoEm: nowISO(), arquivado: false, aportes: {} };
+        }
+      });
+      if (ok) {
+        if (id) { renderCofreManage(data.cofres[id]); toast('Salvo!'); }
+        else { closeCofre(); toast('Cofrinho criado!'); }
+      }
+    }
+
+    async function aportar() {
+      const id = editingCofreId;
+      if (!id) return;
+      const v = parseValor($('cfAporte').value);
+      if (v <= 0) { toast('Informe um valor'); return; }
+      const dataVal = $('cfAporteData').value;
+      if (!dataVal) { toast('Informe a data'); return; }
+      const dataISO = dateInputToISO(dataVal);
+      const mes = dataVal.slice(0, 7);
+      const ok = await commitRemote((estado) => {
+        estado.cofres = estado.cofres || {};
+        const cf = estado.cofres[id];
+        if (!cf) return;
+        cf.aportes = cf.aportes || {};
+        const aid = uid();
+        cf.aportes[aid] = { id: aid, valor: v, mes, data: dataISO, obs: '' };
+      });
+      if (ok && data.cofres[id]) {
+        $('cfAporte').value = '';
+        renderCofreManage(data.cofres[id]);
+        toast('Guardado!');
+      }
+    }
+
+    function removerAporte(aid) {
+      const id = editingCofreId;
+      if (!id || !aid) return;
+      confirmDialog('Remover este aporte?', async () => {
+        const ok = await commitRemote((estado) => {
+          const cf = estado.cofres && estado.cofres[id];
+          if (cf && cf.aportes) delete cf.aportes[aid];
+        });
+        if (ok && data.cofres[id]) renderCofreManage(data.cofres[id]);
+      });
+    }
+
+    function toggleResgate() {
+      const id = editingCofreId;
+      if (!id) return;
+      const c = data.cofres[id];
+      if (!c) return;
+      const arquivar = !c.arquivado;
+      const msg = arquivar ? `Resgatar "${c.nome}"? Sai da lista ativa (histórico preservado).` : `Reativar "${c.nome}"?`;
+      confirmDialog(msg, async () => {
+        const ok = await commitRemote((estado) => {
+          const cf = estado.cofres && estado.cofres[id];
+          if (cf) cf.arquivado = arquivar;
+        });
+        if (ok) { closeCofre(); toast(arquivar ? 'Resgatado!' : 'Reativado'); }
+      });
+    }
+
+    function deleteCofre() {
+      const id = editingCofreId;
+      if (!id) return;
+      confirmDialog('Excluir este cofrinho e todos os aportes? Não dá pra desfazer.', async () => {
+        const ok = await commitRemote((estado) => {
+          if (estado.cofres) delete estado.cofres[id];
+        });
+        if (ok) { closeCofre(); toast('Excluído'); }
+      });
+    }
+
     // ─── Modal gasto ───
     function fillCatSelect(selected) {
       const sel = $('gCategoria');
@@ -812,10 +1120,11 @@
     function showScreen(id) {
       document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('active', s.id === id));
       document.querySelectorAll('.tab-item').forEach((t) => t.classList.toggle('active', t.dataset.screen === id));
-      $('fab').style.display = id === 'screenMes' ? 'flex' : 'none';
+      $('fab').style.display = (id === 'screenMes' || id === 'screenCofres') ? 'flex' : 'none';
       $('appHeader').style.display = (id === 'screenAjustes') ? 'none' : 'flex';
       if (id === 'screenAjustes') renderAjustes();
       if (id === 'screenDash') renderDash();
+      if (id === 'screenCofres') renderCofres();
     }
 
     // ─── Setup / init ───
@@ -856,7 +1165,11 @@
     $('nextMonth').addEventListener('click', () => { viewDate.setMonth(viewDate.getMonth() + 1); renderAll(); });
     $('reloadBtn').addEventListener('click', () => pullRemote());
 
-    $('fab').addEventListener('click', () => openGasto(null));
+    $('fab').addEventListener('click', () => {
+      const cur = document.querySelector('.screen.active');
+      if (cur && cur.id === 'screenCofres') openCofre(null);
+      else openGasto(null);
+    });
     $('gCancel').addEventListener('click', closeGasto);
     $('gSave').addEventListener('click', saveGasto);
     $('gDelete').addEventListener('click', deleteGasto);
@@ -866,6 +1179,15 @@
     $('confirmNo').addEventListener('click', closeConfirm);
     $('confirmYes').addEventListener('click', () => { const cb = confirmCallback; closeConfirm(); if (cb) cb(); });
     $('confirmOverlay').addEventListener('click', (e) => { if (e.target.id === 'confirmOverlay') closeConfirm(); });
+
+    $('cfCancel').addEventListener('click', closeCofre);
+    $('cfSave').addEventListener('click', saveCofre);
+    $('cfAporteBtn').addEventListener('click', aportar);
+    $('cfResgatar').addEventListener('click', toggleResgate);
+    $('cfDelete').addEventListener('click', deleteCofre);
+    $('cfAporte').addEventListener('input', updateAporteWarn);
+    $('cfAporteData').addEventListener('change', updateAporteWarn);
+    $('cofreOverlay').addEventListener('click', (e) => { if (e.target.id === 'cofreOverlay') closeCofre(); });
 
     document.querySelectorAll('.tab-item').forEach((t) =>
       t.addEventListener('click', () => showScreen(t.dataset.screen))
